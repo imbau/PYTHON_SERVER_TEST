@@ -1,6 +1,9 @@
 from call_ai import call_openrouter
 import os
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 WSP_TOKEN = os.getenv("WSP_TOKEN")
 PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
