@@ -9,7 +9,6 @@ api_key=OPENROUTER_API_KEY,
 )
 
 def call_openrouter(user_text):
-  # First API call with reasoning
   response = client.chat.completions.create(
     model="openai/gpt-oss-120b:free",
     messages=[
