@@ -1,7 +1,6 @@
 from openai import OpenAI
 import os
 
-print("OPENROUTER_API_KEY:", OPENROUTER_API_KEY)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 client = OpenAI(
