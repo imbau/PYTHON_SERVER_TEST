@@ -155,11 +155,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     log(f"🌐 Servidor Flask iniciando en puerto {port}...")
     app.run(host="0.0.0.0", port=port)
-```
-
----
-
-## Ahora debería dar:
-```
-🔧 Número original: 5492216982208
-🔧 Número corregido: 54221156982208
