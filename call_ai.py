@@ -33,7 +33,6 @@ def call_openrouter(user_text):
         {
             "role": "assistant",
             "content": response.content,
-            "reasoning_details": response.reasoning_details
         }
     ]
     
