@@ -17,4 +17,16 @@ def call_openrouter(user_text):
             {"role": "user", "content": user_text}
         ]
     )
+      # Extract the assistant message with reasoning_details
+  response = response.choices[0].message
+
+  # Preserve the assistant message with reasoning_details
+  messages = [
+    {"role": "user", "content": user_text},
+    {
+      "role": "assistant",
+      "content": response.content,
+      "reasoning_details": response.reasoning_details  # Pass back unmodified
+    }
+  ]
     return response.choices[0].message.content
