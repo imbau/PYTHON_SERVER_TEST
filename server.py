@@ -18,22 +18,30 @@ def log(message):
 def fix_argentinian_number(number):
     """
     Corrige números argentinos agregando el 15 si falta
-    Ejemplo: 5492216982208 -> 54221156982208
+    Formato esperado:
+    - Entrada: 5492216982208 (54 + 221 + 6982208)
+    - Salida: 54221156982208 (54 + 221 + 15 + 6982208)
     """
-    # Remover cualquier caracter no numérico
     number = ''.join(filter(str.isdigit, str(number)))
     
     log(f"🔧 Número original: {number}")
     
-    # Si empieza con 54 (Argentina) y tiene 13 dígitos (sin el 15)
+    # Verificar si es argentino (empieza con 54) y tiene 13 dígitos
     if number.startswith('54') and len(number) == 13:
-        # Insertar '15' después del código de área
-        # Formato: 54 + área (2-4 dígitos) + 15 + número (6-8 dígitos)
-        # Para 54221XXXXXXX -> 5422115XXXXXXX
-        area_code_length = 3  # Para Buenos Aires (221)
-        fixed_number = number[:2] + number[2:2+area_code_length] + '15' + number[2+area_code_length:]
+        # Extraer partes: 54 + código de área (3 dígitos) + resto
+        country_code = number[:2]  # "54"
+        area_code = number[2:5]    # "221"
+        local_number = number[5:]   # "6982208"
+        
+        # Construir número con 15
+        fixed_number = country_code + area_code + '15' + local_number
         log(f"🔧 Número corregido: {fixed_number}")
         return fixed_number
+    
+    # Si ya tiene 15 dígitos, probablemente ya está correcto
+    if len(number) == 15:
+        log(f"🔧 Número ya tiene 15 dígitos, sin cambios")
+        return number
     
     log(f"🔧 Número sin cambios: {number}")
     return number
@@ -98,14 +106,12 @@ def responder():
     log(f"📤 Enviando a WhatsApp...")
     log(f"   URL: {url}")
     log(f"   Destino: {user_number}")
-    log(f"   Payload: {payload}")
     
     try:
-        wsp_response = requests.post(url, headers=headers, json=payload, timeout=10)
+        wsp_response = requests.post(url, headers=headers, json=payload, timeout=30)
         
         log(f"📬 WhatsApp STATUS: {wsp_response.status_code}")
-        log(f"📬 WhatsApp RESPONSE:")
-        log(f"   {wsp_response.text}")
+        log(f"📬 WhatsApp RESPONSE: {wsp_response.text}")
         
         response_json = wsp_response.json()
         
@@ -124,8 +130,12 @@ def responder():
         })
         
     except requests.exceptions.Timeout:
-        log("❌ TIMEOUT al enviar a WhatsApp")
+        log("❌ TIMEOUT al enviar a WhatsApp (30s)")
         return jsonify({"error": "Timeout enviando mensaje"}), 500
+    except requests.exceptions.ConnectionError as e:
+        log(f"❌ ERROR de conexión: No se puede alcanzar graph.facebook.com")
+        log(f"   Detalles: {e}")
+        return jsonify({"error": "Error de red al conectar con WhatsApp API"}), 500
     except requests.exceptions.RequestException as e:
         log(f"❌ ERROR de requests: {type(e).__name__}: {e}")
         return jsonify({"error": str(e)}), 500
@@ -145,3 +155,11 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     log(f"🌐 Servidor Flask iniciando en puerto {port}...")
     app.run(host="0.0.0.0", port=port)
+```
+
+---
+
+## Ahora debería dar:
+```
+🔧 Número original: 5492216982208
+🔧 Número corregido: 54221156982208
