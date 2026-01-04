@@ -13,7 +13,7 @@ client = OpenAI(
 
 def call_openrouter(user_text):
     response = client.chat.completions.create(
-        model="openai/gpt-oss-120b:free",
+        model="openai/gpt-3.5-turbo",
         messages=[
             {
                 "role": "user",
@@ -39,7 +39,7 @@ def call_openrouter(user_text):
     ]
     
     response2 = client.chat.completions.create(
-        model="openai/gpt-oss-120b:free",
+        model="openai/gpt-3.5-turbo",
         messages=messages,
         extra_body={"reasoning": {"enabled": True}}
     )
