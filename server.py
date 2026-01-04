@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from call_ai import call_openrouter
 import os
+import sys
 import requests
 from dotenv import load_dotenv
 
@@ -8,43 +9,53 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Forzar flush inmediato de prints
+sys.stdout.flush()
+sys.stderr.flush()
+
+def log(message):
+    """Helper para imprimir con flush inmediato"""
+    print(message, flush=True)
+
 @app.post("/responder")
 def responder():
-    print("\n" + "=" * 60)
-    print("🔔 NUEVO MENSAJE RECIBIDO")
-    print("=" * 60)
+    log("\n" + "=" * 60)
+    log("🔔 NUEVO MENSAJE RECIBIDO")
+    log("=" * 60)
     
     # Verificar variables de entorno
     WSP_TOKEN = os.getenv("WSP_TOKEN")
     PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
     
-    print(f"🔑 WSP_TOKEN: {'✅ Configurado (' + WSP_TOKEN[:20] + '...)' if WSP_TOKEN else '❌ NO CONFIGURADO'}")
-    print(f"📱 PHONE_NUMBER_ID: {PHONE_NUMBER_ID if PHONE_NUMBER_ID else '❌ NO CONFIGURADO'}")
+    log(f"🔑 WSP_TOKEN: {'✅ Configurado (' + WSP_TOKEN[:20] + '...)' if WSP_TOKEN else '❌ NO CONFIGURADO'}")
+    log(f"📱 PHONE_NUMBER_ID: {PHONE_NUMBER_ID if PHONE_NUMBER_ID else '❌ NO CONFIGURADO'}")
     
     # Obtener datos del request
     data = request.get_json()
+    log(f"📦 Request body completo: {data}")
+    
     user_text = data.get("user_text", "")
     user_number = data.get("user_number", "")
     
-    print(f"📩 Texto del usuario: '{user_text}'")
-    print(f"📞 Número del usuario: '{user_number}'")
+    log(f"📩 Texto del usuario: '{user_text}'")
+    log(f"📞 Número del usuario: '{user_number}'")
     
     if not user_text or not user_number:
-        print("❌ Faltan datos en el request")
+        log("❌ Faltan datos en el request")
         return jsonify({"error": "Faltan user_text o user_number"}), 400
     
     if not WSP_TOKEN or not PHONE_NUMBER_ID:
-        print("❌ Faltan variables de entorno")
+        log("❌ Faltan variables de entorno")
         return jsonify({"error": "Configuración incompleta"}), 500
     
     # Generar respuesta con IA
-    print("🤖 Llamando a OpenRouter...")
+    log("🤖 Llamando a OpenRouter...")
     try:
         ai_response = call_openrouter(user_text)
-        print(f"✅ IA respondió ({len(ai_response)} caracteres):")
-        print(f"   '{ai_response[:150]}{'...' if len(ai_response) > 150 else ''}'")
+        log(f"✅ IA respondió ({len(ai_response)} caracteres):")
+        log(f"   '{ai_response[:150]}{'...' if len(ai_response) > 150 else ''}'")
     except Exception as e:
-        print(f"❌ Error en IA: {e}")
+        log(f"❌ Error en IA: {e}")
         return jsonify({"error": f"Error en IA: {str(e)}"}), 500
     
     # Enviar mensaje por WhatsApp
@@ -64,26 +75,26 @@ def responder():
         }
     }
     
-    print(f"📤 Enviando a WhatsApp...")
-    print(f"   URL: {url}")
-    print(f"   Destino: {user_number}")
-    print(f"   Mensaje: {len(ai_response)} caracteres")
+    log(f"📤 Enviando a WhatsApp...")
+    log(f"   URL: {url}")
+    log(f"   Destino: {user_number}")
+    log(f"   Payload: {payload}")
     
     try:
         wsp_response = requests.post(url, headers=headers, json=payload, timeout=10)
         
-        print(f"📬 WhatsApp STATUS: {wsp_response.status_code}")
-        print(f"📬 WhatsApp RESPONSE:")
-        print(f"   {wsp_response.text}")
+        log(f"📬 WhatsApp STATUS: {wsp_response.status_code}")
+        log(f"📬 WhatsApp RESPONSE:")
+        log(f"   {wsp_response.text}")
         
         response_json = wsp_response.json()
         
         if wsp_response.status_code == 200:
-            print("✅ Mensaje enviado exitosamente a WhatsApp")
+            log("✅ Mensaje enviado exitosamente a WhatsApp")
         else:
-            print(f"⚠️ WhatsApp respondió con error: {response_json}")
+            log(f"⚠️ WhatsApp respondió con error: {response_json}")
         
-        print("=" * 60 + "\n")
+        log("=" * 60 + "\n")
         
         return jsonify({
             "success": wsp_response.status_code == 200,
@@ -93,17 +104,18 @@ def responder():
         })
         
     except requests.exceptions.Timeout:
-        print("❌ TIMEOUT al enviar a WhatsApp")
+        log("❌ TIMEOUT al enviar a WhatsApp")
         return jsonify({"error": "Timeout enviando mensaje"}), 500
     except requests.exceptions.RequestException as e:
-        print(f"❌ ERROR de requests: {type(e).__name__}: {e}")
+        log(f"❌ ERROR de requests: {type(e).__name__}: {e}")
         return jsonify({"error": str(e)}), 500
     except Exception as e:
-        print(f"❌ ERROR general: {type(e).__name__}: {e}")
+        log(f"❌ ERROR general: {type(e).__name__}: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/")
 def home():
+    log("🏠 Endpoint raíz accedido")
     return jsonify({
         "status": "ok",
         "message": "Python WhatsApp Server is running",
@@ -114,5 +126,5 @@ def home():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"🌐 Servidor Flask iniciando en puerto {port}...")
+    log(f"🌐 Servidor Flask iniciando en puerto {port}...")
     app.run(host="0.0.0.0", port=port)
