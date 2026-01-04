@@ -18,33 +18,40 @@ def log(message):
 def fix_argentinian_number(number):
     """
     Corrige números argentinos agregando el 15 si falta
-    Formato esperado:
-    - Entrada: 5492216982208 (54 + 221 + 6982208)
-    - Salida: 54221156982208 (54 + 221 + 15 + 6982208)
+    
+    Casos:
+    - Buenos Aires capital (11): 54 + 11 + 15 + 8 dígitos
+    - Buenos Aires provincia (ej 221, 223): 54 + 3-4 dígitos de área + 15 + 6-7 dígitos
     """
     number = ''.join(filter(str.isdigit, str(number)))
     
     log(f"🔧 Número original: {number}")
     
-    # Verificar si es argentino (empieza con 54) y tiene 13 dígitos
-    if number.startswith('54') and len(number) == 13:
-        # Extraer partes: 54 + código de área (3 dígitos) + resto
-        country_code = number[:2]  # "54"
-        area_code = number[2:5]    # "221"
-        local_number = number[5:]   # "6982208"
-        
-        # Construir número con 15
-        fixed_number = country_code + area_code + '15' + local_number
-        log(f"🔧 Número corregido: {fixed_number}")
-        return fixed_number
-    
-    # Si ya tiene 15 dígitos, probablemente ya está correcto
-    if len(number) == 15:
-        log(f"🔧 Número ya tiene 15 dígitos, sin cambios")
+    # Si no empieza con 54 o no tiene 13 dígitos, retornar sin cambios
+    if not number.startswith('54') or len(number) != 13:
+        log(f"🔧 Número sin cambios (no cumple criterios): {number}")
         return number
     
-    log(f"🔧 Número sin cambios: {number}")
-    return number
+    # Extraer después del 54
+    rest = number[2:]  # Quitar "54"
+    
+    # Identificar si es Buenos Aires capital (11) o provincia
+    if rest.startswith('11'):
+        # CABA: 54 + 11 + 15 + resto
+        fixed_number = '54' + '11' + '15' + rest[2:]
+    elif rest.startswith('2') or rest.startswith('3'):
+        # Provincia: códigos de área de 3-4 dígitos que empiezan con 2 o 3
+        # Tomamos 4 dígitos para el área
+        area_code = rest[:4]
+        local_number = rest[4:]
+        fixed_number = '54' + area_code + '15' + local_number
+    else:
+        log(f"🔧 Formato de área no reconocido, sin cambios")
+        return number
+    
+    log(f"🔧 Número corregido: {fixed_number}")
+    log(f"   Estructura: 54 + área + 15 + local")
+    return fixed_number
 
 @app.post("/responder")
 def responder():
