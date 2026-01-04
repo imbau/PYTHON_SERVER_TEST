@@ -24,7 +24,6 @@ def call_openrouter(user_text):
                 "content": "Eres un asistente de compra y venta de fondos de comercio."
             }
         ],
-        extra_body={"reasoning": {"enabled": True}}
     )
     
     response = response.choices[0].message
@@ -41,7 +40,6 @@ def call_openrouter(user_text):
     response2 = client.chat.completions.create(
         model="openai/gpt-3.5-turbo",
         messages=messages,
-        extra_body={"reasoning": {"enabled": True}}
     )
     
     return response2.choices[0].message.content
