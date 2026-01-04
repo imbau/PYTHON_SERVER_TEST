@@ -20,6 +20,8 @@ def responder():
     # HARDFIX: Reemplazar tu número específico
     if user_number == "5492216982208":
         user_number = "54221156982208"
+    elif user_number == "5492216216025":
+        user_number = "54221156216025"
     
     if not user_text or not user_number or not WSP_TOKEN or not PHONE_NUMBER_ID:
         print(f"❌ Datos incompletos: text={bool(user_text)}, number={bool(user_number)}")
