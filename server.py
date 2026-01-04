@@ -9,13 +9,34 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Forzar flush inmediato de prints
 sys.stdout.flush()
 sys.stderr.flush()
 
 def log(message):
-    """Helper para imprimir con flush inmediato"""
     print(message, flush=True)
+
+def fix_argentinian_number(number):
+    """
+    Corrige números argentinos agregando el 15 si falta
+    Ejemplo: 5492216982208 -> 54221156982208
+    """
+    # Remover cualquier caracter no numérico
+    number = ''.join(filter(str.isdigit, str(number)))
+    
+    log(f"🔧 Número original: {number}")
+    
+    # Si empieza con 54 (Argentina) y tiene 13 dígitos (sin el 15)
+    if number.startswith('54') and len(number) == 13:
+        # Insertar '15' después del código de área
+        # Formato: 54 + área (2-4 dígitos) + 15 + número (6-8 dígitos)
+        # Para 54221XXXXXXX -> 5422115XXXXXXX
+        area_code_length = 3  # Para Buenos Aires (221)
+        fixed_number = number[:2] + number[2:2+area_code_length] + '15' + number[2+area_code_length:]
+        log(f"🔧 Número corregido: {fixed_number}")
+        return fixed_number
+    
+    log(f"🔧 Número sin cambios: {number}")
+    return number
 
 @app.post("/responder")
 def responder():
@@ -23,22 +44,23 @@ def responder():
     log("🔔 NUEVO MENSAJE RECIBIDO")
     log("=" * 60)
     
-    # Verificar variables de entorno
     WSP_TOKEN = os.getenv("WSP_TOKEN")
     PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
     
     log(f"🔑 WSP_TOKEN: {'✅ Configurado (' + WSP_TOKEN[:20] + '...)' if WSP_TOKEN else '❌ NO CONFIGURADO'}")
     log(f"📱 PHONE_NUMBER_ID: {PHONE_NUMBER_ID if PHONE_NUMBER_ID else '❌ NO CONFIGURADO'}")
     
-    # Obtener datos del request
     data = request.get_json()
     log(f"📦 Request body completo: {data}")
     
     user_text = data.get("user_text", "")
     user_number = data.get("user_number", "")
     
+    # Corregir número argentino
+    user_number = fix_argentinian_number(user_number)
+    
     log(f"📩 Texto del usuario: '{user_text}'")
-    log(f"📞 Número del usuario: '{user_number}'")
+    log(f"📞 Número del usuario (corregido): '{user_number}'")
     
     if not user_text or not user_number:
         log("❌ Faltan datos en el request")
@@ -48,7 +70,6 @@ def responder():
         log("❌ Faltan variables de entorno")
         return jsonify({"error": "Configuración incompleta"}), 500
     
-    # Generar respuesta con IA
     log("🤖 Llamando a OpenRouter...")
     try:
         ai_response = call_openrouter(user_text)
@@ -58,7 +79,6 @@ def responder():
         log(f"❌ Error en IA: {e}")
         return jsonify({"error": f"Error en IA: {str(e)}"}), 500
     
-    # Enviar mensaje por WhatsApp
     url = f"https://graph.facebook.com/v22.0/{PHONE_NUMBER_ID}/messages"
     
     headers = {
@@ -118,13 +138,25 @@ def home():
     log("🏠 Endpoint raíz accedido")
     return jsonify({
         "status": "ok",
-        "message": "Python WhatsApp Server is running",
-        "endpoints": {
-            "/responder": "POST - Procesa mensajes y responde via WhatsApp"
-        }
+        "message": "Python WhatsApp Server is running"
     })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     log(f"🌐 Servidor Flask iniciando en puerto {port}...")
     app.run(host="0.0.0.0", port=port)
+```
+
+---
+
+## También verifica en Meta:
+
+Asegúrate de que el número registrado sea: **`+54 221 15 698 2208`** o **`54221156982208`**
+
+---
+
+Hacé deploy y probá de nuevo. En los logs deberías ver:
+```
+🔧 Número original: 5492216982208
+🔧 Número corregido: 54221156982208
+📞 Número del usuario (corregido): '54221156982208'
