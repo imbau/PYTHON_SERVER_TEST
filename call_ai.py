@@ -26,7 +26,6 @@ def call_openrouter(user_text):
     {
       "role": "assistant",
       "content": response.content,
-      "reasoning_details": response.reasoning_details  # Pass back unmodified
     }
   ]
     return response.choices[0].message.content
