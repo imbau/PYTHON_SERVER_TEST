@@ -145,18 +145,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     log(f"🌐 Servidor Flask iniciando en puerto {port}...")
     app.run(host="0.0.0.0", port=port)
-```
-
----
-
-## También verifica en Meta:
-
-Asegúrate de que el número registrado sea: **`+54 221 15 698 2208`** o **`54221156982208`**
-
----
-
-Hacé deploy y probá de nuevo. En los logs deberías ver:
-```
-🔧 Número original: 5492216982208
-🔧 Número corregido: 54221156982208
-📞 Número del usuario (corregido): '54221156982208'
