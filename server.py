@@ -31,17 +31,24 @@ def responder():
    
 
     try:
-        history = requests.get(
-            f"http://tradeboom.epikasoftware.com/api/webhook/whatsapp/{conversation_id}",
-            timeout=10
-        ).json()
-    
-        messages = history.get("data", []) if isinstance(history, dict) else history
-        is_first_message = len(messages) == ""
-    
-    except Exception as e:
-        print("No se pudo consultar historial:", e)
+        
+        response = requests.get(f"http://tradeboom.epikasoftware.com/api/webhook/whatsapp/{conversation_id}", timeout=10)
+
+        if response.status_code == 404:
+            # No existe conversación → primera vez
+            messages = []
+            is_first_message = True
+        else:
+            response.raise_for_status()
+            history = response.json()
+            messages = history.get("data", []) if isinstance(history, dict) else history
+            is_first_message = len(messages) == 0
+
+    except requests.exceptions.RequestException as e:
+        print("Error consultando historial:", e)
+        messages = []
         is_first_message = True
+
 
     if is_first_message:
         save_history(
