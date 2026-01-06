@@ -12,15 +12,22 @@ def get_history(conversation_id):
     return res.json()
 
 def format_messages(history):
-    data = history.get("data", history)
+    # Si es dict → intentamos sacar data
+    if isinstance(history, dict):
+        history = history.get("data", [])
+
+    # Si no es lista, forzamos lista vacía
+    if not isinstance(history, list):
+        history = []
 
     return [
         {
             "role": h.get("role", "user"),
             "content": h.get("message", "")
         }
-        for h in data
+        for h in history
     ]
+
 
 def send_message(to):
     conversation_id = to
