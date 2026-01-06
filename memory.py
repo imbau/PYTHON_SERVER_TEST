@@ -1,7 +1,7 @@
 import requests
 import os
 
-def save_history(id, sender, to, dir, message):
+def save_history(id, sender, to, dir, message, role):
   url = f"http://tradeboom.epikasoftware.com/api/webhook/whatsapp"
   
   payload = {
@@ -9,7 +9,8 @@ def save_history(id, sender, to, dir, message):
     "from": sender,
     "to": to,
     "direction": dir,
-    "message": message
+    "message": message,
+    "role" : role
   }
 
   try:
