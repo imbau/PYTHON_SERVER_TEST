@@ -6,7 +6,7 @@ WSP_TOKEN = os.getenv('WSP_TOKEN')
 PHONE_NUMBER_ID = os.getenv('PHONE_NUMBER_ID')
 
 def get_history(conversation_id):
-    url = f"http://tradeboom.epikasoftware.com/api/webhook/whatsapp/{conversation_id}"
+    url = f"http://tradeboom.epikasoftware.com/api/whatsapp/conversation/{conversation_id}"
     res = requests.get(url, timeout=20)
     res.raise_for_status()
     return res.json()
