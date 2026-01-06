@@ -28,6 +28,8 @@ def responder():
 
     conversation_id = user_number
 
+   
+
     try:
         history = requests.get(
             f"http://tradeboom.epikasoftware.com/api/webhook/whatsapp/{conversation_id}",
@@ -35,7 +37,7 @@ def responder():
         ).json()
     
         messages = history.get("data", []) if isinstance(history, dict) else history
-        is_first_message = len(messages) == 0
+        is_first_message = len(messages) == ""
     
     except Exception as e:
         print("No se pudo consultar historial:", e)
