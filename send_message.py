@@ -27,5 +27,7 @@ def send_message(to, user_text):
     response = requests.post(url, headers=headers, json=data)
     print("STATUS:", response.status_code)
     print("RESPONSE:", response.json())
-    return response.json()
-
+    return {
+        "whatsapp_response": response.json(),
+        "message": text
+    }
