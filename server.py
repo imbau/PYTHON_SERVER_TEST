@@ -28,28 +28,54 @@ def responder():
 
     conversation_id = user_number
 
+    try:
+        history = requests.get(
+            f"http://tradeboom.epikasoftware.com/api/webhook/whatsapp/{conversation_id}",
+            timeout=10
+        ).json()
+    
+        messages = history.get("data", []) if isinstance(history, dict) else history
+        is_first_message = len(messages) == 0
+    
+    except Exception as e:
+        print("No se pudo consultar historial:", e)
+        is_first_message = True
+
+    if is_first_message:
+        save_history(
+            conversation_id,
+            sender="SYSTEM",
+            to="BOT",
+            direction="out",
+            message= "Eres un chatbot de Tradeboom, una página web de compra y venta de fondos de comercio.",
+            role="system"
+        )
+
     # Guardar mensaje de usuario
 
-    save_history(
+    user_history = save_history(
         conversation_id,
-        sender=user_number,
+        sender="USER",
         to="BOT",
         direction="in",
-        message=user_text
+        message=user_text,
+        role="user"
     )
 
     # Enviar mensaje
     
-    bot_response = send_message(user_number, user_text)
+    bot_response = send_message(user_number)
+    bot_message = bot_response.get("message", "Respuesta enviada")
 
     # Guardar mensaje de bot
 
     save_history(
         conversation_id,
         sender="BOT",
-        to=user_number,
+        to="USER",
         direction="out",
-        message=bot_response.get("message", "Respuesta enviada")
+        message=bot_message,
+        role="assistant"
     )
     
     return jsonify({"success": True})
