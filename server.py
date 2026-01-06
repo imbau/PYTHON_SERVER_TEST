@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from call_ai import call_openrouter
 import os
 import requests
+from send_message import send_message
+from memory import save_history
 
 app = Flask(__name__)
 
@@ -23,43 +25,34 @@ def responder():
     if not user_text or not user_number or not WSP_TOKEN or not PHONE_NUMBER_ID:
         print(f"❌ Datos incompletos: text={bool(user_text)}, number={bool(user_number)}")
         return jsonify({"error": "Configuración incompleta"}), 400
+
+    conversation_id = user_number
+
+    # Guardar mensaje de usuario
+
+    save_history(
+        conversation_id,
+        sender=user_number,
+        to="BOT",
+        direction="in",
+        message=user_text
+    )
+
+    # Enviar mensaje
     
-    # Generar respuesta con IA
-    try:
-        ai_response = call_openrouter(user_text)
-    except Exception as e:
-        print(f"❌ Error IA: {e}")
-        return jsonify({"error": "Error en IA"}), 500
+    bot_response = send_message(user_number, user_text)
+
+    # Guardar mensaje de bot
+
+    save_history(
+        conversation_id,
+        sender="BOT",
+        to=user_number,
+        direction="out",
+        message=bot_response.get("message", "Respuesta enviada")
+    )
     
-    # Enviar a WhatsApp
-    url = f"https://graph.facebook.com/v22.0/{PHONE_NUMBER_ID}/messages"
-    headers = {
-        "Authorization": f"Bearer {WSP_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": user_number,
-        "type": "text",
-        "text": {"body": ai_response}
-    }
-    
-    try:
-        wsp_response = requests.post(url, headers=headers, json=payload, timeout=30)
-        response_json = wsp_response.json()
-        
-        if wsp_response.status_code != 200:
-            print(f"❌ WhatsApp error {wsp_response.status_code}: {response_json}")
-        
-        return jsonify({
-            "success": wsp_response.status_code == 200,
-            "wsp_status": wsp_response.status_code,
-            "wsp_response": response_json
-        })
-        
-    except Exception as e:
-        print(f"❌ Error enviando a WhatsApp: {e}")
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"success": True})
 
 @app.route("/")
 def home():
