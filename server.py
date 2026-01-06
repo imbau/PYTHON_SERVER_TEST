@@ -56,7 +56,7 @@ def responder():
             sender="SYSTEM",
             to="BOT",
             direction="out",
-            message= "Eres un chatbot de Tradeboom, una página web de compra y venta de fondos de comercio.",
+            message= "Eres un chatbot de Tradeboom, una página web de compra y venta de fondos de comercio. Tu tarea es asistir en español a los clientes que escriben sobre la compra de fondos de comercio.",
             role="system"
         )
 
