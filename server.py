@@ -32,7 +32,7 @@ def responder():
 
     try:
         
-        response = requests.get(f"http://tradeboom.epikasoftware.com/api/webhook/whatsapp/{conversation_id}", timeout=10)
+        response = requests.get(f"http://tradeboom.epikasoftware.com/api/whatsapp/{conversation_id}", timeout=10)
 
         if response.status_code == 404:
             # No existe conversación → primera vez
