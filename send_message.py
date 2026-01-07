@@ -36,15 +36,18 @@ def format_messages(history):
     
     return formatted
 
-def send_message(to):
+def send_message(to, messages_override=None):
     conversation_id = to
     
-    # Obtener historial
-    history = get_history(conversation_id)
-    print(f"📖 Historial recibido de la API: {history}")
-    
-    # Formatear mensajes
-    messages = format_messages(history)
+    # Si recibimos mensajes directamente, usarlos
+    if messages_override is not None:
+        print(f"📖 Usando historial pasado directamente ({len(messages_override)} mensajes)")
+        messages = format_messages(messages_override)
+    else:
+        # Obtener historial de la API
+        history = get_history(conversation_id)
+        print(f"📖 Historial recibido de la API: {history}")
+        messages = format_messages(history)
     
     # Llamar a la IA
     print(f"🤖 Llamando a OpenRouter con {len(messages)} mensajes...")
