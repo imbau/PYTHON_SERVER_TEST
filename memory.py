@@ -1,23 +1,25 @@
 import requests
-import os
+
+BASE_URL = "http://tradeboom.epikasoftware.com/api"
 
 def save_history(id, sender, to, direction, message, role):
-    url = "http://tradeboom.epikasoftware.com/api/webhook/whatsapp"
-    
+    if direction == "in":
+        url = f"{BASE_URL}/webhook/whatsapp"
+    else:
+        url = f"{BASE_URL}/whatsapp/bot-message"
+
     payload = {
         "conversation_id": str(id),
         "from": sender,
         "to": to,
-        "direction": direction,
-        "message": str(message),
-        "role" : role # Asegúrate que tu API acepte este campo 'role'
+        "message": str(message)
     }
 
     try:
-        print(f"📡 Intentando guardar en BD: {role} -> {message[:30]}...")
+        print(f"📡 Guardando en BD ({direction}): {message[:40]}...")
         response = requests.post(url, json=payload, timeout=20)
-        print(f"✅ Respuesta BD: {response.status_code} - {response.text}")
-        return {"success": True, "data": response.json()}
+        print(f"✅ BD: {response.status_code} - {response.text}")
+        return True
     except Exception as e:
-        print(f"❌ Error crítico al guardar: {e}")
-        return {"success": False, "error": str(e)}
+        print(f"❌ Error BD: {e}")
+        return False
