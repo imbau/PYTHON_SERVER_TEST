@@ -10,7 +10,7 @@ def save_history(id, sender, to, direction, message, role):
 
     payload = {
         "conversation_id": str(id),
-        "from": sender,
+        "sender": sender,
         "to": to,
         "message": str(message)
     }
