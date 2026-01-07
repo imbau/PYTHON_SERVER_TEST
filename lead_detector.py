@@ -31,11 +31,19 @@ Criterio:
 
     ai_response = call_openrouter(prompt)
 
-    # si viene mal, que no rompa nada
-    raw = ai_response.get("message", "{}")
-
     try:
-        json.loads(raw)  # validar que sea JSON
+        # si viene como string, lo parseo
+        if isinstance(ai_response, str):
+            ai_response = json.loads(ai_response)
+
+        # OpenRouter → choices[0].message.content
+        raw = ai_response["choices"][0]["message"]["content"]
+
+        # validar JSON del modelo
+        json.loads(raw)
+
         return raw
-    except:
+
+    except Exception as e:
+        print("ERROR PARSEANDO AI:", e)
         return '{"ready": false}'
