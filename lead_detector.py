@@ -31,6 +31,10 @@ Criterio:
 
     ai_response = call_openrouter(prompt)
 
+    print("----RAW OPENROUTER RESPONSE----")
+    print(ai_response)
+
+
     try:
         # si viene como string, lo parseo
         if isinstance(ai_response, str):
