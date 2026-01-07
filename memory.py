@@ -3,10 +3,8 @@ import requests
 BASE_URL = "http://tradeboom.epikasoftware.com/api"
 
 def save_history(id, sender, to, direction, message, role):
-    if direction == "in":
-        url = f"{BASE_URL}/webhook/whatsapp"
-    else:
-        url = f"{BASE_URL}/whatsapp/bot-message"
+    url = f"{BASE_URL}/webhook/whatsapp"
+   
 
     payload = {
         "conversation_id": str(id),
