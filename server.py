@@ -12,8 +12,28 @@ SYSTEM_PROMPT = "Eres un chatbot de Tradeboom, una página web de compra y venta
 
 @app.post("/responder")
 def responder():
-    # ... (obtención de datos igual)
-
+    WSP_TOKEN = os.getenv("WSP_TOKEN")
+    PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
+    
+    data = request.get_json() or {}
+    
+    # 🛡️ SEGURIDAD: Convertir explícitamente a string.
+    # Si viene null en el JSON, 'or ""' lo convierte a vacío.
+    user_text = str(data.get("user_text") or "")
+    user_number = str(data.get("user_number") or "")
+    
+    # Normalización de números
+    if user_number == "5492216982208":
+        user_number = "54221156982208"
+    elif user_number == "5492216216025":
+        user_number = "54221156216025"
+    
+    # Validar que tengamos datos reales
+    if not user_text.strip() or not user_number.strip() or not WSP_TOKEN or not PHONE_NUMBER_ID:
+        print(f"❌ Datos inválidos: text='{user_text}', number='{user_number}'")
+        return jsonify({"error": "Faltan datos"}), 400
+    
+    conversation_id = user_number
     # 1. Obtener Historial de la API
     history_messages = []
     try:
