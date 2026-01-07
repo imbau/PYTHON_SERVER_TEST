@@ -32,8 +32,13 @@ Criterio:
     ai_response = call_openrouter(prompt)
 
     try:
-        # ai_response YA ES JSON STRING
-        data = json.loads(ai_response)
+        # Si viene string → parseamos
+        if isinstance(ai_response, str):
+            data = json.loads(ai_response)
+        else:
+            # Si ya es dict lo usamos directo
+            data = ai_response
+
         return data
 
     except Exception as e:
