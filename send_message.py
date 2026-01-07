@@ -1,60 +1,27 @@
 from call_ai import call_openrouter
 import os
 import requests
+import json
 
 WSP_TOKEN = os.getenv('WSP_TOKEN')
 PHONE_NUMBER_ID = os.getenv('PHONE_NUMBER_ID')
 
-def get_history(conversation_id):
-    url = f"http://tradeboom.epikasoftware.com/api/whatsapp/conversation/{conversation_id}"
-    res = requests.get(url, timeout=20)
-    res.raise_for_status()
-    return res.json()
-
-def format_messages(history):
-    # Si es dict → intentamos sacar data
-    if isinstance(history, dict):
-        history = history.get("data", [])
-    # Si no es lista, forzamos lista vacía
-    if not isinstance(history, list):
-        history = []
-    
-    formatted = [
-        {
-            "role": h.get("role", "user"),
-            "content": h.get("message", "")
-        }
-        for h in history
-    ]
-    
-    # 🔍 DEBUG: Ver qué mensajes estamos enviando a la IA
-    print("=" * 50)
-    print("📨 MENSAJES QUE SE ENVÍAN A LA IA:")
-    for i, msg in enumerate(formatted):
-        print(f"{i+1}. [{msg['role']}]: {msg['content'][:100]}")
-    print("=" * 50)
-    
-    return formatted
-
 def send_message(to, messages_override=None):
-    conversation_id = to
-    
-    # Si recibimos mensajes directamente, usarlos
-    if messages_override is not None:
-        print(f"📖 Usando historial pasado directamente ({len(messages_override)} mensajes)")
-        messages = format_messages(messages_override)
-    else:
-        # Obtener historial de la API
-        history = get_history(conversation_id)
-        print(f"📖 Historial recibido de la API: {history}")
-        messages = format_messages(history)
-    
-    # Llamar a la IA
-    print(f"🤖 Llamando a OpenRouter con {len(messages)} mensajes...")
+    # Si no recibimos mensajes, fallamos (la lógica ahora está en server.py)
+    if messages_override is None:
+        print("❌ Error: send_message llamado sin mensajes")
+        return {"message": ""}
+        
+    messages = messages_override
+
+    # DEBUG: Ver cómo llega el diálogo a la IA ahora
+    print("🧠 CONTEXTO IA (Últimos 3 mensajes):")
+    print(json.dumps(messages[-3:], indent=2, ensure_ascii=False))
+
+    # Llamar a OpenRouter
     text = call_openrouter(messages)
-    print(f"✅ Respuesta de la IA: {text[:200]}")
     
-    # Enviar por WhatsApp
+    # Enviar a WhatsApp
     url = f"https://graph.facebook.com/v22.0/{PHONE_NUMBER_ID}/messages"
     headers = {
         "Authorization": f"Bearer {WSP_TOKEN}",
@@ -65,16 +32,13 @@ def send_message(to, messages_override=None):
         "messaging_product": "whatsapp",
         "to": to,
         "type": "text",
-        "text": {
-            "body": text
-        }
+        "text": {"body": text}
     }
     
-    response = requests.post(url, headers=headers, json=data)
-    print("STATUS:", response.status_code)
-    print("RESPONSE:", response.json())
-    
-    return {
-        "whatsapp_response": response.json(),
-        "message": text
-    }
+    try:
+        res = requests.post(url, headers=headers, json=data)
+        print(f"✅ Enviado a WSP: {res.status_code}")
+    except Exception as e:
+        print(f"❌ Error enviando a WSP: {e}")
+
+    return {"message": text}
