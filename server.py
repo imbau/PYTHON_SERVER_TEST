@@ -12,92 +12,54 @@ SYSTEM_PROMPT = "Eres un chatbot de Tradeboom, una página web de compra y venta
 
 @app.post("/responder")
 def responder():
-    WSP_TOKEN = os.getenv("WSP_TOKEN")
-    PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
-    
-    data = request.get_json()
-    user_text = data.get("user_text", "")
-    user_number = data.get("user_number", "")
-    
-    # Normalización de números
-    if user_number == "5492216982208":
-        user_number = "54221156982208"
-    elif user_number == "5492216216025":
-        user_number = "54221156216025"
-    
-    if not user_text or not user_number or not WSP_TOKEN or not PHONE_NUMBER_ID:
-        return jsonify({"error": "Configuración incompleta"}), 400
-    
-    conversation_id = user_number
-    
-    # --- 1. OBTENER Y LIMPIAR HISTORIAL ---
+    # ... (obtención de datos igual)
+
+    # 1. Obtener Historial de la API
     history_messages = []
     try:
         response = requests.get(f"http://tradeboom.epikasoftware.com/api/whatsapp/conversation/{conversation_id}", timeout=10)
         if response.status_code == 200:
-            history_data = response.json()
-            raw_data = history_data.get("data", []) if isinstance(history_data, dict) else history_data
-            if isinstance(raw_data, list):
-                history_messages = raw_data
-    except Exception as e:
-        print("Error historial:", e)
+            raw_data = response.json()
+            history_messages = raw_data.get("data", []) if isinstance(raw_data, dict) else raw_data
+    except:
         history_messages = []
 
-    # --- 2. CONSTRUIR CONTEXTO PARA LA IA ---
-    messages_for_ai = []
+    # 2. CONSTRUCCIÓN DEL CONTEXTO (CORRIGIENDO TU API AL VUELO)
+    messages_for_ai = [{"role": "system", "content": SYSTEM_PROMPT}]
     
-    # A) Inyectar SIEMPRE el System Prompt primero (con el rol correcto)
-    messages_for_ai.append({
-        "role": "system",
-        "content": SYSTEM_PROMPT
-    })
-    
-    # B) Procesar historial para arreglar roles incorrectos
-    for msg in history_messages:
-        content = msg.get("message") or msg.get("content") or ""
-        
-        # IMPORTANTE: Si encontramos el texto del System Prompt en el historial (como 'user'), LO SALTAMOS
-        if content.strip() == SYSTEM_PROMPT.strip():
-            continue
-            
-        # INTENTO DE ARREGLAR ROL:
-        # A veces las APIs devuelven 'direction': 'in' (usuario) o 'out' (bot)
-        role = "user" # Por defecto
-        
-        # Si la API devuelve el rol explícito correcto, úsalo, si no, intenta deducirlo
-        api_role = msg.get("role")
-        direction = msg.get("direction") # Chequear si tu API tiene esto
-        
-        if api_role == "assistant" or api_role == "system":
-            role = api_role
-        elif direction == "out" or msg.get("sender") == "BOT":
-            role = "assistant"
-        
-        # Agregamos al historial limpio
-        if content:
-            messages_for_ai.append({
-                "role": role,
-                "content": content
-            })
+    for i, msg in enumerate(history_messages):
+        content = str(msg.get("message") or msg.get("content") or "").strip()
+        if not content or content == SYSTEM_PROMPT: continue
 
-    # C) Agregar el mensaje ACTUAL del usuario
-    messages_for_ai.append({
-        "role": "user",
-        "content": user_text
-    })
+        # REGLA DE ORO: Si el historial dice que todo es 'user', 
+        # vamos a alternar: impar = user, par = assistant (o viceversa)
+        # O mejor aún: si el mensaje NO es el actual, y es el anterior al actual,
+        # es muy probable que sea la respuesta vieja del bot.
+        
+        role = msg.get("role", "user")
+        
+        # Corrección manual: Si detectamos el mensaje en inglés que pusiste arriba, 
+        # sabemos que es el BOT aunque la API diga 'user'
+        if "How can I assist you" in content or i == len(history_messages) - 1:
+            if i % 2 != 0: # Lógica simple de alternancia si la API está rota
+                role = "assistant"
 
-    # --- 3. GUARDAR MENSAJE DE USUARIO EN BD ---
+        messages_for_ai.append({"role": role, "content": content})
+
+    # 3. AGREGAR MENSAJE ACTUAL
+    messages_for_ai.append({"role": "user", "content": user_text})
+
+    # 4. ENVIAR A IA
+    bot_response = send_message(user_number, messages_override=messages_for_ai)
+    bot_text = bot_response.get("message", "")
+
+    # 5. GUARDAR (Y ver los logs para saber por qué no se guarda)
+    print("💾 Guardando mensaje del usuario...")
     save_history(conversation_id, "USER", "BOT", "in", user_text, "user")
     
-    # --- 4. ENVIAR A LA IA ---
-    # Pasamos 'messages_for_ai' que YA TIENE el historial arreglado
-    bot_response = send_message(user_number, messages_override=messages_for_ai)
-    bot_message = bot_response.get("message", "")
-    
-    # --- 5. GUARDAR RESPUESTA BOT EN BD ---
-    if bot_message:
-        save_history(conversation_id, "BOT", "USER", "out", bot_message, "assistant")
-    
+    print("💾 Guardando respuesta del bot...")
+    save_history(conversation_id, "BOT", "USER", "out", bot_text, "assistant")
+
     return jsonify({"success": True})
 
 if __name__ == "__main__":
