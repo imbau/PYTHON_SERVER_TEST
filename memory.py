@@ -10,7 +10,8 @@ def save_history(id, sender, to, direction, message, role):
         "conversation_id": str(id),
         "sender": sender,
         "to": to,
-        "message": str(message)
+        "message": str(message),
+        "role": role
     }
 
     try:
