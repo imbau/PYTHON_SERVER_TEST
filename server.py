@@ -4,6 +4,11 @@ import os
 import requests
 from send_message import send_message
 from memory import save_history
+from lead_detector import analyze_conversation_for_lead
+from lead_parser import extract_lead_data
+from create_lead import create_lead
+from datetime import datetime
+import json
 
 app = Flask(__name__)
 
@@ -80,6 +85,36 @@ def responder():
     
     print("💾 Guardando respuesta del bot...")
     save_history(conversation_id, "BOT", "USER", "out", bot_text, "assistant")
+
+    try:
+        print("🔎 Evaluando si ya podemos crear Lead...")
+
+        evaluation = analyze_conversation_for_lead(history_messages)
+        print("📥 IA Lead Evaluator:", evaluation)
+    
+        data = json.loads(evaluation)
+    
+        if data.get("ready"):
+            print("🚀 Lead suficiente! Creando...")
+    
+            lead_data = extract_lead_data(history_messages)
+            visit_date = datetime.now().strftime("%Y-%m-%d")
+            
+            create_lead(
+                name = lead_data["name"],
+                phone = user_number, # este seguro lo tenés acá
+                notes = lead_data["notes"],
+                status = lead_data["status"],
+                visit_date = visit_date
+            )
+
+    
+        else:
+            print("⏳ Aún no hay datos suficientes para Lead")
+    
+    except Exception as e:
+        print("❌ Error en evaluación de lead:", e)
+
 
     return jsonify({"success": True})
 
