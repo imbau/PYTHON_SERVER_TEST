@@ -142,7 +142,14 @@ def responder():
             log.info("🚀 Lead listo!")
 
             lead_data = extract_lead_data(history_messages)
-            log.info(f"📌 Lead Data: {lead_data}")
+            log.info(f"📌 Lead Data RAW: {lead_data}")
+            
+            # 👇 FIX MAGISTRAL
+            if isinstance(lead_data, str):
+                lead_data = json.loads(lead_data)
+            
+            log.info(f"📌 Lead Data Parsed: {lead_data}")
+
 
             visit_date = datetime.now().strftime("%Y-%m-%d")
             log.info(f"📅 Visit Date: {visit_date}")
