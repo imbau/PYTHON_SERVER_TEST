@@ -130,44 +130,18 @@ def responder():
     # ===========================
     # 5️⃣ LEAD
     # ===========================
-    try:
-        log.info("🔎 Evaluando Lead...")
-        evaluation = analyze_conversation_for_lead(history_messages)
-        log.info(f"📥 RAW LEAD EVALUATION: {evaluation}")
 
-        data = json.loads(evaluation)
-        log.info(f"📊 Parsed Lead: {data}")
+    visit_date = datetime.now().strftime("%Y-%m-%d")
 
-        if data.get("ready"):
-            log.info("🚀 Lead listo!")
+    success = create_lead(
+        name = "Bautista",
+        phone = user_number,
+        notes = "Quiere vender el fondo de comercio de su heladería.",
+        status = "interested",
+        visit_date = visit_date
+    )
 
-            lead_data = extract_lead_data(history_messages)
-            log.info(f"📌 Lead Data RAW: {lead_data}")
-            
-            # 👇 FIX MAGISTRAL
-            if isinstance(lead_data, str):
-                lead_data = json.loads(lead_data)
-            
-            log.info(f"📌 Lead Data Parsed: {lead_data}")
-
-
-            visit_date = datetime.now().strftime("%Y-%m-%d")
-            log.info(f"📅 Visit Date: {visit_date}")
-
-            success = create_lead(
-                name = lead_data["name"],
-                phone = user_number,
-                notes = lead_data["notes"],
-                status = lead_data["status"],
-                visit_date = visit_date
-            )
-
-            log.info(f"🏁 Lead creado: {success}")
-
-        else:
-            log.info("⏳ Aún no hay datos suficientes")
-    except Exception as e:
-        log.exception("❌ ERROR PROCESANDO LEAD")
+    log.info(f"🏁 Lead creado: {success}")
 
     log.info("✅ FINALIZADO REQUEST")
     return jsonify({"success": True})
