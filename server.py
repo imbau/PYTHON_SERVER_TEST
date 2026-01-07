@@ -39,8 +39,9 @@ def responder():
     try:
         response = requests.get(f"http://tradeboom.epikasoftware.com/api/whatsapp/conversation/{conversation_id}", timeout=10)
         if response.status_code == 200:
-            raw_data = response.json()
-            history_messages = raw_data.get("data", []) if isinstance(raw_data, dict) else raw_data
+            history_messages = response.json()
+        else:
+            history_messages = []
     except:
         history_messages = []
 
