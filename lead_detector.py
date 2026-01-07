@@ -6,21 +6,8 @@ def analyze_conversation_for_lead(history):
         {
             "role": "system",
             "content": """
-Eres un analista. Tu tarea es evaluar una conversación de WhatsApp.
-Determina si ya hay suficiente información para crear un lead.
-
-Debes responder SIEMPRE en JSON:
-
-{
- "ready": true|false,
- "name": "string o vacío",
- "notes": "resumen claro de interés del usuario o vacío",
- "status": "new | interested | not_interested | need_followup"
-}
-
-Criterio:
-- ready = true SOLO si el usuario ya expresó interés claro y dio su nombre.
-- Si falta algo, ready = false.
+Eres un analista...
+(igual que antes)
 """
         },
         {
@@ -32,20 +19,19 @@ Criterio:
     ai_response = call_openrouter(prompt)
 
     try:
-        # Si viene string → parseamos
+        # si viene string JSON → validamos
         if isinstance(ai_response, str):
-            data = json.loads(ai_response)
-        else:
-            # Si ya es dict lo usamos directo
-            data = ai_response
-
-        return data
+            json.loads(ai_response)  
+            return ai_response
+        
+        # si viene dict → lo convertimos a string json
+        return json.dumps(ai_response)
 
     except Exception as e:
         print("ERROR PARSEANDO AI:", e)
-        return {
+        return json.dumps({
             "ready": False,
             "name": "",
             "notes": "",
             "status": "new"
-        }
+        })
