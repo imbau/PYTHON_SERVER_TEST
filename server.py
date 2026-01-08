@@ -6,8 +6,6 @@ import os
 import requests
 from send_message import send_message
 from memory import save_history
-from lead_detector import analyze_conversation_for_lead
-from lead_parser import extract_lead_data
 from create_lead import create_lead
 from datetime import datetime
 import json
