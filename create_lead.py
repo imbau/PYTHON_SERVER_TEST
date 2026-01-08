@@ -2,23 +2,26 @@ import requests
 
 BASE_URL = "http://tradeboom.epikasoftware.com/api/leads"
 
-def lead_exists(phone):
-    response = requests.get(f"{BASE_URL}?phone={phone}")
-
-    if response.status_code != 200:
-        print("⚠️ No pude verificar leads, mejor no crear nada")
-        return True  
-
-    data = response.json()
-
-    return len(data) > 0
-
+def lead_exists(phone_number):
+    try:
+        response = requests.get(BASE_URL)
+        response.raise_for_status()
+        leads_existentes = response.json()
+    
+        ya_existe = any(lead.get('phone') == phone_number for lead in leads_existentes)
+    
+        if ya_existe:
+            print(f"Lógica: El número {phone_number} ya existe. No se envía lead.")
+            return False
+        else:
+            print(f"Lógica: El número {phone_number} no existe. Enviando nuevo lead...")
+            create_lead(phone_number)
+            return True
+    
+    except Exception as e:
+        print(f"Error al conectar con el endpoint: {e}")
 
 def create_lead(name, phone, notes, status, visit_date):
-
-    if lead_exists(phone):
-        print("⛔ Ya existe lead para este número. No se crea otro.")
-        return False
 
     payload = {
         "name": name,
