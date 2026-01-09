@@ -10,6 +10,7 @@ def save_history(id, sender, to, direction, message, role, name=None):
             "conversation_id": str(id),
             "sender": sender,
             "to": to,
+            "direction": direction,
             "message": str(message),
             "role": role
         }
@@ -18,6 +19,7 @@ def save_history(id, sender, to, direction, message, role, name=None):
             "conversation_id": str(id),
             "sender": sender,
             "to": to,
+            "direction": direction,
             "message": str(message),
             "role": role,
             "name": name
