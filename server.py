@@ -88,6 +88,10 @@ def responder():
         log.exception("❌ ERROR obteniendo historial")
         history_messages = []
 
+    log.info(f"🏪 Negocios relevantes encontrados: {len(relevant)}")
+    for b in relevant:
+        log.info(f" - {b.get('title')} ({b.get('city')})")
+
     # ===========================
     # 2️⃣ CONTEXTO
     # ===========================
