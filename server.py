@@ -1,14 +1,10 @@
 import sys
 import logging
 from flask import Flask, request, jsonify
-from call_ai import call_openrouter
 import os
 import requests
 from send_message import send_message
 from memory import save_history
-from create_lead import create_lead
-from datetime import datetime
-import json
 
 # ========= 🔥 FORZAR LOGS EN RENDER =========
 # No buffer en stdout
@@ -125,24 +121,10 @@ def responder():
     log.info("💾 Guardando bot...")
     save_history(conversation_id, "BOT", "USER", "out", bot_text, "assistant")
 
-    # ===========================
-    # 5️⃣ LEAD
-    # ===========================
-
-    visit_date = datetime.now().strftime("%Y-%m-%d")
-
-    success = create_lead(
-        name = "Bautista",
-        phone = user_number,
-        notes = "Quiere vender el fondo de comercio de su heladería.",
-        status = "interested",
-        visit_date = visit_date
-    )
-
-    log.info(f"🏁 Lead creado: {success}")
-
     log.info("✅ FINALIZADO REQUEST")
     return jsonify({"success": True})
+
+    log.info(f"HEADERS: {dict(request.headers)}")
 
 
 if __name__ == "__main__":
