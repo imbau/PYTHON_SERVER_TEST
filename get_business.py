@@ -1,3 +1,6 @@
+import requests
+import logging
+
 def get_active_businesses():
     try:
         response = requests.get(
@@ -9,6 +12,7 @@ def get_active_businesses():
     except Exception as e:
         log.exception("❌ Error obteniendo negocios activos")
     return []
+
 def find_relevant_businesses(user_text, businesses, limit=3):
     keywords = user_text.lower().split()
     matches = []
@@ -29,6 +33,7 @@ def find_relevant_businesses(user_text, businesses, limit=3):
     matches.sort(key=lambda x: x[0], reverse=True)
 
     return [b for _, b in matches[:limit]]
+
 def build_business_context(businesses):
     if not businesses:
         return None
