@@ -22,7 +22,7 @@ log = logging.getLogger("tradeboom")
 
 app = Flask(__name__)
 
-SYSTEM_PROMPT = "Eres un chatbot de Tradeboom, una página web de compra y venta de fondos de comercio. Tu tarea es asistir en español a los clientes que escriben sobre la compra de fondos de comercio."
+SYSTEM_PROMPT = "Eres un chatbot de Tradeboom, una página web de compra y venta de fondos de comercio. Tu tarea es asistir en español a los clientes que escriben sobre la compra de fondos de comercio. Es muy importante que lo primero que preguntes en absolutamente todas las conversaciones sea el nombre del usuario."
 
 @app.post("/responder")
 def responder():
