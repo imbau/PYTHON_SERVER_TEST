@@ -5,6 +5,7 @@ import os
 import requests
 from send_message import send_message
 from memory import save_history, find_name
+from get_business import (get_active_businesses, find_relevant_businesses, build_business_context)
 
 NAME_LOCK = set()
 
@@ -92,7 +93,19 @@ def responder():
     # ===========================
     log.info("🧠 Construyendo contexto...")
 
+    businesses = get_active_businesses()
+    relevant = find_relevant_businesses(user_text, businesses)
+    business_context = build_business_context(relevant)
+
+    
     messages_for_ai = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+    if business_context:
+        messages_for_ai.append({
+            "role": "system",
+            "content": business_context
+        })
+
 
     for i, msg in enumerate(history_messages):
         content = str(msg.get("message") or msg.get("content") or "").strip()
