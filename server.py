@@ -6,6 +6,8 @@ import requests
 from send_message import send_message
 from memory import save_history, find_name
 
+NAME_LOCK = set()
+
 # ========= 🔥 FORZAR LOGS EN RENDER =========
 # No buffer en stdout
 sys.stdout.reconfigure(line_buffering=True)
@@ -113,26 +115,29 @@ def responder():
     log.info(f"🤖 BOT RESPONSE: {bot_text}")
 
     # ===========================
-    # 4️⃣ CONTAR MENSAJES DEL BOT
-    # ===========================
-    
-    bot_messages_count = len([
-        m for m in history_messages
-        if m.get("role") == "assistant"
-    ]) + 1  # +1 por el mensaje que acabamos de enviar
-    
-    log.info(f"🤖 BOT MSG COUNT: {bot_messages_count}")
-
-    # ===========================
-    # 5️⃣ GUARDAR HISTORIAL
+    # 4️⃣ GUARDAR HISTORIAL
     # ===========================
     log.info("💾 Guardando usuario...")
+    
     name = None
-    if bot_messages_count == 3:
-        log.info("🔍 Intentando detectar nombre del usuario...")
+    
+    if conversation_id not in NAME_LOCK:
         name = find_name(conversation_id)
+    
+        if name is not None:
+            NAME_LOCK.add(conversation_id)
+            log.info(f"🔒 Nombre fijado: {name}")
+    
+    save_history(
+        conversation_id,
+        "USER",
+        "BOT",
+        "in",
+        user_text,
+        "user",
+        name
+    )
 
-    save_history(conversation_id, "USER", "BOT", "in", user_text, "user", name)
     
     log.info("💾 Guardando bot...")
     save_history(conversation_id, "BOT", "USER", "out", bot_text, "assistant")
