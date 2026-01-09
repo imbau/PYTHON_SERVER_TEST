@@ -42,7 +42,12 @@ def find_name(conversation_id):
 
         history_messages = response.json()
 
-        text = " ".join(history_messages)
+        text = " ".join(
+            msg["content"]
+            for msg in history_messages
+            if msg.get("role") == "user" and isinstance(msg.get("content"), str)
+        )
+
 
         messages = [
             { "role": "system",
