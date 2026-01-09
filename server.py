@@ -132,6 +132,11 @@ def responder():
         if name is not None:
             NAME_LOCK.add(conversation_id)
             log.info(f"🔒 Nombre fijado: {name}")
+        else:
+            log.info("No se ha encontrado un nombre")
+    else:
+        log.info("Ya existe un nombre en la memoria")
+            
 
     if name != None:
         save_history(
