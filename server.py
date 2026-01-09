@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 import os
 import requests
 from send_message import send_message
-from memory import save_history
+from memory import save_history, find_name
 
 # ========= 🔥 FORZAR LOGS EN RENDER =========
 # No buffer en stdout
@@ -113,10 +113,26 @@ def responder():
     log.info(f"🤖 BOT RESPONSE: {bot_text}")
 
     # ===========================
-    # 4️⃣ GUARDAR HISTORIAL
+    # 4️⃣ CONTAR MENSAJES DEL BOT
+    # ===========================
+    
+    bot_messages_count = len([
+        m for m in history_messages
+        if m.get("role") == "assistant"
+    ]) + 1  # +1 por el mensaje que acabamos de enviar
+    
+    log.info(f"🤖 BOT MSG COUNT: {bot_messages_count}")
+
+    # ===========================
+    # 5️⃣ GUARDAR HISTORIAL
     # ===========================
     log.info("💾 Guardando usuario...")
-    save_history(conversation_id, "USER", "BOT", "in", user_text, "user")
+    name = None
+    if bot_messages_count == 3:
+        log.info("🔍 Intentando detectar nombre del usuario...")
+        name = find_name(conversation_id)
+
+    save_history(conversation_id, "USER", "BOT", "in", user_text, "user", name)
     
     log.info("💾 Guardando bot...")
     save_history(conversation_id, "BOT", "USER", "out", bot_text, "assistant")
