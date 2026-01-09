@@ -1,18 +1,27 @@
 import requests
+from call_ai import call_openrouter
 
 BASE_URL = "http://tradeboom.epikasoftware.com/api"
 
-def save_history(id, sender, to, direction, message, role):
+def save_history(id, sender, to, direction, message, role, name=None):
     url = f"{BASE_URL}/webhook/whatsapp"
-   
-
-    payload = {
-        "conversation_id": str(id),
-        "sender": sender,
-        "to": to,
-        "message": str(message),
-        "role": role
-    }
+    if name is None:
+        payload = {
+            "conversation_id": str(id),
+            "sender": sender,
+            "to": to,
+            "message": str(message),
+            "role": role
+        }
+    else:
+        payload = {
+            "conversation_id": str(id),
+            "sender": sender,
+            "to": to,
+            "message": str(message),
+            "role": role,
+            "name": name
+        }
 
     try:
         print(f"📡 Guardando en BD ({direction}): {message[:40]}...")
@@ -22,3 +31,41 @@ def save_history(id, sender, to, direction, message, role):
     except Exception as e:
         print(f"❌ Error BD: {e}")
         return False
+
+def find_name(conversation_id):
+    url = f"{BASE_URL}/whatsapp/conversation/{conversation_id}"
+    
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code != 200:
+            return None
+
+        history_messages = response.json()
+
+        # Tomamos SOLO mensajes del usuario
+        user_messages = [
+            m["message"] for m in history_messages
+            if m.get("role") == "user"
+        ]
+
+        text = " ".join(user_messages)
+
+        messages = [
+            { "role": "system",
+             "content": "Eres un experto analítico de conversaciones, y tu trabajo es revisar todos los mensajes del usuario y extraer y retornar únicamente el nombre del usuario. Si no encuentras ningún nombre, solo devuelve 'nuevo'"
+            },
+            { "role": "user",
+             "content": text
+            }
+        ]
+
+        name = call_openrouter(messages)
+
+        if not name or name.strip().lower() == "nuevo":
+            return None
+        
+        return name.strip()
+        
+    except Exception as e:
+        print(f"❌ Error buscando nombre: {e}")
+        return None
