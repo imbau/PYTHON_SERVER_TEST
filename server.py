@@ -73,6 +73,10 @@ def responder():
         if response.status_code == 200:
             history_messages = response.json()
             log.info(f"📚 HISTORIAL RECIBIDO ({len(history_messages)})")
+
+            if not history_messages and conversation_id in NAME_LOCK:
+                NAME_LOCK.remove(conversation_id)
+                log.info("🧹 NAME_LOCK limpiado (historial vacío)")
         else:
             log.warning("⚠️ No se pudo recuperar historial")
             history_messages = []
@@ -127,16 +131,26 @@ def responder():
         if name is not None:
             NAME_LOCK.add(conversation_id)
             log.info(f"🔒 Nombre fijado: {name}")
-    
-    save_history(
-        conversation_id,
-        "USER",
-        "BOT",
-        "in",
-        user_text,
-        "user",
-        name
-    )
+
+    if name != None:
+        save_history(
+            conversation_id,
+            "USER",
+            "BOT",
+            "in",
+            user_text,
+            "user",
+            name
+        )
+    else:
+        save_history(
+            conversation_id,
+            "USER",
+            "BOT",
+            "in",
+            user_text,
+            "user"
+        )
 
     
     log.info("💾 Guardando bot...")
