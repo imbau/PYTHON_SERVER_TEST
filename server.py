@@ -74,9 +74,10 @@ def responder():
             history_messages = response.json()
             log.info(f"📚 HISTORIAL RECIBIDO ({len(history_messages)})")
 
-            if not history_messages and conversation_id in NAME_LOCK:
+            if len(history_messages) < 2 and conversation_id in NAME_LOCK:
                 NAME_LOCK.remove(conversation_id)
-                log.info("🧹 NAME_LOCK limpiado (historial vacío)")
+                log.info("🧹 NAME_LOCK limpiado (historial mínimo)")
+
         else:
             log.warning("⚠️ No se pudo recuperar historial")
             history_messages = []
