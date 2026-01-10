@@ -1,6 +1,8 @@
 import requests
 import logging
 
+log = logging.getLogger("tradeboom")
+
 def get_active_businesses():
     try:
         response = requests.get(
