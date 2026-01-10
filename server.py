@@ -88,10 +88,6 @@ def responder():
         log.exception("❌ ERROR obteniendo historial")
         history_messages = []
 
-    log.info(f"🏪 Negocios relevantes encontrados: {len(relevant)}")
-    for b in relevant:
-        log.info(f" - {b.get('title')} ({b.get('city')})")
-
     # ===========================
     # 2️⃣ CONTEXTO
     # ===========================
@@ -101,7 +97,10 @@ def responder():
     relevant = find_relevant_businesses(user_text, businesses)
     business_context = build_business_context(relevant)
 
-    
+    log.info(f"🏪 Negocios relevantes encontrados: {len(relevant)}")
+    for b in relevant:
+        log.info(f" - {b.get('title')} ({b.get('city')})")
+
     messages_for_ai = [{"role": "system", "content": SYSTEM_PROMPT}]
 
     if business_context:
