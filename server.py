@@ -6,6 +6,10 @@ import requests
 from send_message import send_message, send_text_message
 from memory import save_history, find_name
 from get_business import get_active_businesses, wants_businesses
+from datetime import datetime, timedelta
+
+CONVERSATION_START = {}
+CONVERSATION_LIMIT = timedelta(hours=24)
 
 NAME_LOCK = set()
 
@@ -74,6 +78,20 @@ def responder():
         return jsonify({"error": "Faltan datos"}), 400
 
     conversation_id = user_number
+
+    now = datetime.utcnow()
+    
+    if conversation_id not in CONVERSATION_START:
+        CONVERSATION_START[conversation_id] = now
+        log.info(f"🕒 Primer mensaje: {now.isoformat()}")
+    else:
+        start_time = CONVERSATION_START[conversation_id]
+        elapsed = now - start_time
+        remaining = CONVERSATION_LIMIT - elapsed
+    
+        log.info(f"⏱️ Tiempo en conversación: {elapsed}")
+        log.info(f"⌛ Tiempo restante: {remaining}")
+
 
     # ===========================
     # 1️⃣ HISTORIAL
