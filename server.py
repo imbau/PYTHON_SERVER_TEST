@@ -58,8 +58,8 @@ def responder():
 
     log.info(f"📞 NORMALIZED NUMBER: {user_number}")
 
-    if expired:
-        log.info("⏰ Conversación expirada (controlada por webhook)")
+    if expired and not user_text.strip():
+        log.info("⏰ Conversación expirada sin mensaje del usuario")
     
         send_text_message(
             user_number,
