@@ -42,3 +42,23 @@ def send_message(to, messages_override=None):
         print(f"❌ Error enviando a WSP: {e}")
 
     return {"message": text}
+
+def send_text_message(to, text):
+    url = f"https://graph.facebook.com/v22.0/{PHONE_NUMBER_ID}/messages"
+    headers = {
+        "Authorization": f"Bearer {WSP_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "text",
+        "text": {"body": text}
+    }
+
+    try:
+        res = requests.post(url, headers=headers, json=data)
+        print(f"✅ Texto enviado a WSP: {res.status_code}")
+    except Exception as e:
+        print(f"❌ Error enviando texto a WSP: {e}")
