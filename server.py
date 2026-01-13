@@ -3,7 +3,7 @@ import logging
 from flask import Flask, request, jsonify
 import os
 import requests
-from send_message import send_message
+from send_message import send_message, send_text_message
 from memory import save_history, find_name
 from get_business import get_active_businesses, wants_businesses
 
@@ -59,18 +59,10 @@ def responder():
     if expired:
         log.info("⏰ Conversación expirada (controlada por webhook)")
     
-        send_message(
+        send_text_message(
             user_number,
-            text=(
-                "⏳ *El tiempo de esta conversación ha finalizado.*\n\n"
-                "Si querés continuar, podés hablar con un agente humano."
-            ),
-            buttons=[
-                {
-                    "id": "human_agent",
-                    "title": "Hablar con un agente humano"
-                }
-            ]
+            "⏳ *El tiempo de esta conversación ha finalizado.*\n\n"
+            "Si querés continuar, podés hablar con un agente humano."
         )
     
         return jsonify({"success": True, "expired": True})
