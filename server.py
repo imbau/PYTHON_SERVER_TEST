@@ -41,6 +41,21 @@ def responder():
 
     expired = bool(data.get("expired", False))
 
+    user_text = str(data.get("user_text") or "")
+    user_number = str(data.get("user_number") or "")
+
+    log.info(f"👤 USER TEXT: {user_text}")
+    log.info(f"📞 USER NUMBER RAW: {user_number}")
+
+    if user_number == "5492216982208":
+        user_number = "54221156982208"
+    elif user_number == "5492216216025":
+        user_number = "54221156216025"
+    elif user_number == "5491170650235":
+        user_number = "54111570650235"
+
+    log.info(f"📞 NORMALIZED NUMBER: {user_number}")
+
     if expired:
         log.info("⏰ Conversación expirada (controlada por webhook)")
     
@@ -59,21 +74,6 @@ def responder():
         )
     
         return jsonify({"success": True, "expired": True})
-
-    user_text = str(data.get("user_text") or "")
-    user_number = str(data.get("user_number") or "")
-
-    log.info(f"👤 USER TEXT: {user_text}")
-    log.info(f"📞 USER NUMBER RAW: {user_number}")
-
-    if user_number == "5492216982208":
-        user_number = "54221156982208"
-    elif user_number == "5492216216025":
-        user_number = "54221156216025"
-    elif user_number == "5491170650235":
-        user_number = "54111570650235"
-
-    log.info(f"📞 NORMALIZED NUMBER: {user_number}")
 
     if not user_text.strip() or not user_number.strip() or not WSP_TOKEN or not PHONE_NUMBER_ID:
         log.error("❌ ERROR: Datos inválidos")
