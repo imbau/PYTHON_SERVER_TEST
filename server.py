@@ -53,6 +53,8 @@ def responder():
         user_number = "54221156216025"
     elif user_number == "5491170650235":
         user_number = "54111570650235"
+    elif user_number == "5492212264703":
+        user_number = "54221152264703"
 
     log.info(f"📞 NORMALIZED NUMBER: {user_number}")
 
