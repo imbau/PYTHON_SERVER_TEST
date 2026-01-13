@@ -3,13 +3,9 @@ import logging
 from flask import Flask, request, jsonify
 import os
 import requests
-from send_message import send_message, send_text_message
+from send_message import send_message
 from memory import save_history, find_name
 from get_business import get_active_businesses, wants_businesses
-from datetime import datetime, timedelta
-
-CONVERSATION_START = {}
-CONVERSATION_LIMIT = timedelta(hours=24)
 
 NAME_LOCK = set()
 
@@ -43,8 +39,6 @@ def responder():
     data = request.get_json() or {}
     log.info(f"📥 RAW REQUEST DATA: {data}")
 
-    expired = bool(data.get("expired", False))
-
     user_text = str(data.get("user_text") or "")
     user_number = str(data.get("user_number") or "")
 
@@ -57,41 +51,14 @@ def responder():
         user_number = "54221156216025"
     elif user_number == "5491170650235":
         user_number = "54111570650235"
-    elif user_number == "5492212264703":
-        user_number = "54221152264703"
 
     log.info(f"📞 NORMALIZED NUMBER: {user_number}")
-
-    if expired and not user_text.strip():
-        log.info("⏰ Conversación expirada sin mensaje del usuario")
-    
-        send_text_message(
-            user_number,
-            "⏳ *El tiempo de esta conversación ha finalizado.*\n\n"
-            "Si querés continuar, podés hablar con un agente humano."
-        )
-    
-        return jsonify({"success": True, "expired": True})
 
     if not user_text.strip() or not user_number.strip() or not WSP_TOKEN or not PHONE_NUMBER_ID:
         log.error("❌ ERROR: Datos inválidos")
         return jsonify({"error": "Faltan datos"}), 400
 
     conversation_id = user_number
-
-    now = datetime.utcnow()
-    
-    if conversation_id not in CONVERSATION_START:
-        CONVERSATION_START[conversation_id] = now
-        log.info(f"🕒 Primer mensaje: {now.isoformat()}")
-    else:
-        start_time = CONVERSATION_START[conversation_id]
-        elapsed = now - start_time
-        remaining = CONVERSATION_LIMIT - elapsed
-    
-        log.info(f"⏱️ Tiempo en conversación: {elapsed}")
-        log.info(f"⌛ Tiempo restante: {remaining}")
-
 
     # ===========================
     # 1️⃣ HISTORIAL
