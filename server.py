@@ -39,6 +39,27 @@ def responder():
     data = request.get_json() or {}
     log.info(f"📥 RAW REQUEST DATA: {data}")
 
+    expired = bool(data.get("expired", False))
+
+    if expired:
+        log.info("⏰ Conversación expirada (controlada por webhook)")
+    
+        send_message(
+            user_number,
+            text=(
+                "⏳ *El tiempo de esta conversación ha finalizado.*\n\n"
+                "Si querés continuar, podés hablar con un agente humano."
+            ),
+            buttons=[
+                {
+                    "id": "human_agent",
+                    "title": "Hablar con un agente humano"
+                }
+            ]
+        )
+    
+        return jsonify({"success": True, "expired": True})
+
     user_text = str(data.get("user_text") or "")
     user_number = str(data.get("user_number") or "")
 
