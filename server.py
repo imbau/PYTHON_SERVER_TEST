@@ -26,9 +26,11 @@ log = logging.getLogger("tradeboom")
 
 app = Flask(__name__)
 
-SYSTEM_PROMPT = "Eres un chatbot de Tradeboom, una página web de compra y venta de fondos de comercio. Tu tarea es asistir en español a los clientes que escriben sobre la compra de fondos de comercio. Es muy importante que lo primero que preguntes en absolutamente todas las conversaciones sea el nombre del usuario. Cuando quieras resaltar una palabra o ponerla en negrita, solo pon un par de asteriscos, *de esta manera*."
+config = requests.get("https://tradeboom.epikasoftware.com/api/asistent-conf").json()
+SYSTEM_PROMPT = config["prompt"]
+LIMIT_MINUTES = config["time_limit"]
 
-def conversation_expired(history_messages, limit_minutes=5):
+def conversation_expired(history_messages, limit_minutes):
     log.info("⏰ Evaluando expiración de conversación...")
 
     if not history_messages:
@@ -129,7 +131,7 @@ def responder():
             # ===========================
             # ⏰ CONTROL DE TIEMPO
             # ===========================
-            if conversation_expired(history_messages, limit_minutes=5):
+            if conversation_expired(history_messages, LIMIT_MINUTES):
                 log.warning("⛔ Conversación expirada, se corta flujo")
                 
                 send_text_message(
@@ -249,11 +251,10 @@ def responder():
     log.info("💾 Guardando bot...")
     save_history(conversation_id, "BOT", "USER", "out", bot_text, "assistant")
 
-    log.info("✅ FINALIZADO REQUEST")
-    return jsonify({"success": True})
-
     log.info(f"HEADERS: {dict(request.headers)}")
 
+    log.info("✅ FINALIZADO REQUEST")
+    return jsonify({"success": True})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
