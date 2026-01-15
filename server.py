@@ -126,19 +126,19 @@ def responder():
             history_messages = response.json()
             log.info(f"📚 HISTORIAL RECIBIDO ({len(history_messages)})")
 
-                # ===========================
-                # ⏰ CONTROL DE TIEMPO
-                # ===========================
-                if conversation_expired(history_messages, limit_minutes=5):
-                    log.warning("⛔ Conversación expirada, se corta flujo")
+            # ===========================
+            # ⏰ CONTROL DE TIEMPO
+            # ===========================
+            if conversation_expired(history_messages, limit_minutes=5):
+                log.warning("⛔ Conversación expirada, se corta flujo")
                 
-                    send_text_message(
-                        user_number,
-                        "⏰ *Tiempo de conversación acabado*\n\n"
-                        "Si necesitás seguir hablando, podés contactar a un agente humano."
-                    )
-                
-                    return jsonify({"expired": True})
+                send_text_message(
+                    user_number,
+                    "⏰ *Tiempo de conversación acabado*\n\n"
+                    "Si necesitás seguir hablando, podés contactar a un agente humano."
+                )
+            
+                return jsonify({"expired": True})
 
             if len(history_messages) < 2 and conversation_id in NAME_LOCK:
                 NAME_LOCK.remove(conversation_id)
