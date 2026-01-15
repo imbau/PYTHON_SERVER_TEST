@@ -68,6 +68,8 @@ def conversation_expired(history_messages, limit_minutes=5):
 def responder():
     log.info("📩 ====== NUEVA REQUEST ======")
 
+    history_messages = []
+
     WSP_TOKEN = os.getenv("WSP_TOKEN")
     PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
 
