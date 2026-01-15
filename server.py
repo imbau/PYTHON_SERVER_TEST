@@ -29,25 +29,29 @@ app = Flask(__name__)
 SYSTEM_PROMPT = "Eres un chatbot de Tradeboom, una página web de compra y venta de fondos de comercio. Tu tarea es asistir en español a los clientes que escriben sobre la compra de fondos de comercio. Es muy importante que lo primero que preguntes en absolutamente todas las conversaciones sea el nombre del usuario. Cuando quieras resaltar una palabra o ponerla en negrita, solo pon un par de asteriscos, *de esta manera*."
 
 def conversation_expired(history_messages, limit_minutes=5):
+    log.info("⏰ Evaluando expiración de conversación...")
+
     if not history_messages:
+        log.warning("⚠️ Historial vacío → no se puede calcular tiempo")
         return False
 
-    # Tomamos el PRIMER mensaje del usuario
     first_user_msg = None
     for msg in history_messages:
+        log.debug(f"📨 Msg role={msg.get('role')} created_at={msg.get('created_at')}")
         if msg.get("role") == "user":
             first_user_msg = msg
             break
 
     if not first_user_msg:
+        log.warning("⚠️ No se encontró ningún mensaje del usuario")
         return False
 
     created_at = first_user_msg.get("created_at")
     if not created_at:
+        log.warning("⚠️ El primer mensaje no tiene created_at")
         return False
 
     try:
-        # ISO 8601 → datetime
         start_time = datetime.fromisoformat(
             created_at.replace("Z", "+00:00")
         )
@@ -55,11 +59,17 @@ def conversation_expired(history_messages, limit_minutes=5):
 
         diff_minutes = (now - start_time).total_seconds() / 60
 
+        log.info(f"⏱️ Inicio conversación: {start_time.isoformat()}")
+        log.info(f"⏱️ Ahora: {now.isoformat()}")
         log.info(f"⏱️ Minutos transcurridos: {diff_minutes:.2f}")
-        
-        return diff_minutes >= limit_minutes
+        log.info(f"⏱️ Límite configurado: {limit_minutes} min")
 
-    except Exception as e:
+        expired = diff_minutes >= limit_minutes
+        log.info(f"⏰ ¿Expirada?: {'SÍ' if expired else 'NO'}")
+
+        return expired
+
+    except Exception:
         log.exception("❌ Error calculando expiración")
         return False
 
@@ -100,21 +110,6 @@ def responder():
     conversation_id = user_number
 
     # ===========================
-    # ⏰ CONTROL DE TIEMPO
-    # ===========================
-    if conversation_expired(history_messages, limit_minutes=5):
-        log.info("⏳ Conversación expirada (>5 minutos)")
-    
-        send_text_message(
-            user_number,
-            "⏰ *Tiempo de conversación acabado*\n\n"
-            "Si necesitás seguir hablando, podés contactar a un agente humano."
-        )
-    
-        return jsonify({"expired": True})
-
-
-    # ===========================
     # 1️⃣ HISTORIAL
     # ===========================
     history_messages = []
@@ -130,6 +125,20 @@ def responder():
         if response.status_code == 200:
             history_messages = response.json()
             log.info(f"📚 HISTORIAL RECIBIDO ({len(history_messages)})")
+
+                # ===========================
+                # ⏰ CONTROL DE TIEMPO
+                # ===========================
+                if conversation_expired(history_messages, limit_minutes=5):
+                    log.warning("⛔ Conversación expirada, se corta flujo")
+                
+                    send_text_message(
+                        user_number,
+                        "⏰ *Tiempo de conversación acabado*\n\n"
+                        "Si necesitás seguir hablando, podés contactar a un agente humano."
+                    )
+                
+                    return jsonify({"expired": True})
 
             if len(history_messages) < 2 and conversation_id in NAME_LOCK:
                 NAME_LOCK.remove(conversation_id)
